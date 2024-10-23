@@ -23,7 +23,7 @@ public:
 
     double all_rows(int index_join);
 
-    double cost_nestloop_inner(int index_inner)
+    double cost_nestloop_inner(int index_inner);
 
     ~Joins();
 
