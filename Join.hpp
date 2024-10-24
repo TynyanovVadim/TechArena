@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <cmath>
 
-using join_pred = std::unordered_map<int, std::pair<std::string, std::string>>; // {101: [a, b]}
+using join_pred = std::unordered_map<int, std::vector<std::pair<std::string, std::string>>>; // {101: [a, b]}
 using scan_pred = std::vector<std::string>; // [1.a, 1.b, ... ]
 using card_t = std::unordered_map<std::string, int>; // {1.a: card}
 
@@ -20,11 +20,9 @@ public:
 
     Joins(int n, card_t &&card_, std::vector<Step> &&tree_, scan_pred &&scan_preds_, join_pred &&join_preds_);
 
-    // double many_rows(int index_table);
+    void all_rows(int index_left, int index_right);
 
-    // double all_rows(int index_join);
-
-    // double cost_nestloop_inner(int index_inner);
+    void cost_nestloop_inner(int index_left, int index_right);
 
     void print() const;
 

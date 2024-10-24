@@ -15,49 +15,39 @@ Joins::Joins(int n, card_t &&card_, std::vector<Step> &&tree_, scan_pred &&scan_
 
  void Joins::print() const {
     for (auto step: tree) {
-        std::cout << step.rows << "\n";
+        std::cout << step.rows << '\t' << step.cost << "\n";
     }
  }
 
-// double Joins::many_rows(int index_table)
-// {
-//     struct Step & scan = tree[index_table];
-//     int sum_card = 0;
-//     for(const auto& it : join_preds)        //count multi_card (card(join-preds))
-//     {
-//         if(atoi(it.first.c_str()) == index_table)
-//             sum_card += card[it.first + '.' + it.second];   //it.first-number of tables    it.second-predicat
-//     }
-//     return (sum_card) ? scan.rows/sum_card : 0;         //rows(<scan_with_multi_pred>)
-// }
 
-// double Joins::all_rows(int index_join)  //Возможно нужно было использовать вектор сканов
-// {
-//     struct Step & result = tree[index_join];
-//     int sum_card = 0, i_left = result.left, i_right = result.right;
-//     std::string left, right;
-//     for(const auto& it_left : join_preds)
-//     {
-//         if(atoi(it_left.first.c_str()) == i_left)
-//         {
-//             //поиск второго и макс над ними
-//             for(const auto& it_right : join_preds)
-//             {
-//                 if(atoi(it_right.first.c_str()) == i_right)
-//                     sum_card += std::max(card[it_left.first + '.' + it_left.second], card[it_right.first + '.' + it_right.second]);
-//             }
-//         }
-//     }
-//     return (sum_card) ? (tree[i_left].rows * tree[i_right].rows / sum_card) : 0;
-// }
+void Joins::all_rows(int index_left, int index_right)
+{
+    int result_index = index_left ^ index_right;
+    struct Step & result = tree[result_index];
+    result.left = index_left;
+    result.right = index_right;
+    int sum_card = 0;
+    std::string pred_left, pred_right;
 
-// double Joins::cost_nestloop_inner(int index_inner)
-// {
-//     struct Step & inner = tree[index_inner];
-//     struct Step & left_subtree = tree[inner.left];
-//     struct Step & right_subtree = tree[inner.right];
-//     return left_subtree.cost + right_subtree.cost + right_subtree.rows * 1.1 + (left_subtree.rows - 1) * right_subtree.rows + all_rows(index_inner) * 0.1;
-// }
+    std::vector<std::pair<std::string, std::string>> & vec_join = join_preds[result_index];
+    for(const auto& item : vec_join)
+    {
+        pred_left = std::to_string(index_left) + '.' + item.first;
+        pred_right = std::to_string(index_right) + '.' + item.second;
+        sum_card += std::max(card[pred_left], card[pred_right]);
+    }
+    result.rows = tree[index_left].rows * tree[index_right].rows / sum_card;
+}
+
+void Joins::cost_nestloop_inner(int index_left, int index_right)
+{
+    int inner_index = index_left ^ index_right;
+    struct Step & inner = tree[inner_index];
+    struct Step & left_subtree = tree[index_left];
+    struct Step & right_subtree = tree[index_right];
+
+    inner.cost = left_subtree.cost + right_subtree.cost + right_subtree.rows * 1.1 + (left_subtree.rows - 1) * right_subtree.rows + inner.rows * 0.1;
+}
 
 int main() {
     int n;
@@ -98,7 +88,7 @@ int main() {
         int table1, table2;
         std::cin >> table1 >> table2 >> attr1 >> attr2;
 
-        join_preds_[(1 << (table1 - 1)) ^ (1 << (table2 -1))] = std::move(std::pair<std::string, std::string>(attr1, attr2));
+        join_preds_[(1 << (table1 - 1)) ^ (1 << (table2 -1))].push_back(std::move(std::pair<std::string, std::string>(attr1, attr2)));
     }
 
     Joins solver(n, std::move(card_), std::move(tree_), std::move(scan_preds_), std::move(join_preds_));
@@ -110,9 +100,25 @@ int main() {
             int right = i ^ left;
         }
     }
+    //test for inner 1^2
+    solver.all_rows(1, 2);
+    solver.cost_nestloop_inner(1, 2);
 
     solver.print();
 
     return 0;
 }
 
+/*4
+10 12 15 8
+5
+1 a 3
+2 b 5
+3 b 10
+2 c 1
+4 d 5
+0
+3
+1 2 a b
+1 3 a b
+2 4 c d*/
