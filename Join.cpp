@@ -9,11 +9,12 @@ Joins::Joins(int n, card_t &&card_, std::vector<Step> &&tree_, scan_pred &&scan_
             int i = attr.find('.');
             int table_num = atoi(attr.substr(0, i).c_str());
             tree[1 << (table_num - 1)].rows /= card[attr];
+            tree[1 << (table_num - 1)].cost *= 2;
         }
     }
  }
 
- void Joins::print() const {
+void Joins::print() const {
     for (auto step: tree) {
         std::cout << step.rows << '\t' << step.cost << "\n";
     }
@@ -56,6 +57,7 @@ int main() {
     for (int i = 0; i < n; i++) {
         Step tmp = Step();
         std::cin >> tmp.rows;
+        tmp.cost = tmp.rows;
         tree_[1 << i] = std::move(tmp);
     }
 
@@ -92,14 +94,6 @@ int main() {
     }
 
     Joins solver(n, std::move(card_), std::move(tree_), std::move(scan_preds_), std::move(join_preds_));
-
-    for (int i = 1; i < pow(2, n) + 2; ++i) {
-        int k = __builtin_popcount(i);
-        if (k == 1) continue;
-        for (int left = 1; left < left; ++left) {
-            int right = i ^ left;
-        }
-    }
     //test for inner 1^2
     solver.all_rows(1, 2);
     solver.cost_nestloop_inner(1, 2);

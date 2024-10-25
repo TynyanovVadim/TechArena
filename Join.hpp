@@ -24,6 +24,7 @@ public:
 
     void cost_nestloop_inner(int index_left, int index_right);
 
+    void solve();
     void print() const;
 
     // ~Joins();
